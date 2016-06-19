@@ -1,81 +1,84 @@
+from random import randrange
 import pygame
-
-pygame.init()
-
-size = [400, 300]
-screen = pygame.display.set_mode(size)
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-rect_head = pygame.Rect(0, 0, 20, 20)
+direction_dictionary = {
+    pygame.K_LEFT: {"x": -1, "y": 0},
+    pygame.K_RIGHT: {"x": 1, "y": 0},
+    pygame.K_UP: {"x": 0, "y": -1},
+    pygame.K_DOWN: {"x": 0, "y": 1},
+}
+
+size = [400, 300]
+
+pygame.init()
+
+screen = pygame.display.set_mode(size)
+
+direction = {"x": 1, "y": 0}
+
+snake = []
+
+for n in range(3):
+    rect = pygame.Rect(n * 20 * (-1), 0, 20, 20)
+    snake.append(rect)
+
+
+def position(p, d, m):
+    v = p + 20 * d
+
+    if v > m:
+        return 0
+
+    if v < 0:
+        return m
+
+    return v
+
+
+mouse = pygame.Rect(randrange(0, size[0], 20), randrange(0, size[1], 20), 20, 20)
+
+score = 0
+font = pygame.font.Font(None, 21)
+text = font.render("Score: " + str(score), 1, BLACK)
+
 
 done = False
-clock = pygame.time.Clock()
-
-pygame.draw.rect(screen, BLACK, rect_head, 0)
-
-l = 3
-t = [None] * l
-t[l - 1] = [0, 0]
-
-_x = 1
-_y = 0
-k = 0
-
 while not done:
+    pygame.time.wait(250)
 
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                _x = -1
-                _y = 0
+        if event.type == pygame.KEYDOWN and event.key in direction_dictionary:
+            direction = direction_dictionary[event.key]
 
-            if event.key == pygame.K_RIGHT:
-                _x = 1
-                _y = 0
-
-            if event.key == pygame.K_UP:
-                _x = 0
-                _y = -1
-
-            if event.key == pygame.K_DOWN:
-                _x = 0
-                _y = 1
-
-        if event.type == pygame.QUIT:
+        elif event.type == pygame.QUIT:
             done = True
 
     screen.fill(WHITE)
 
-    rect_head.move_ip(_x * 20, _y * 20)
+    if snake[0].colliderect(mouse):
+        snake.append(pygame.Rect(0, 0, 20, 20))
+        score += 1
+        text = font.render("Score: " + str(score), 1, BLACK)
+        mouse.x = randrange(0, size[0], 20)
+        mouse.y = randrange(0, size[1], 20)
 
-    if rect_head.x >= 400:
-        rect_head.move_ip(-400, 0)
-    elif rect_head.x < 0:
-        rect_head.move_ip(400, 0)
+    for i in reversed(range(1, len(snake))):
+        snake[i].x = snake[i - 1].x
+        snake[i].y = snake[i - 1].y
 
-    if rect_head.y >= 300:
-        rect_head.move_ip(0, -300)
-    elif rect_head.y < 0:
-        rect_head.move_ip(0, 300)
+    snake[0].x = position(snake[0].x, direction["x"], size[0])
+    snake[0].y = position(snake[0].y, direction["y"], size[1])
 
-    pygame.draw.rect(screen, BLACK, rect_head, 0)
+    for i in range(len(snake)):
+        pygame.draw.rect(screen, BLACK, snake[i], 0)
+        if i != 0 and snake[0].colliderect(snake[i]):
+            done = True
 
-    t.append([rect_head.x, rect_head.y])
+    pygame.draw.rect(screen, BLACK, mouse, 1)
 
-    if len(t) > l:
-        t.pop(0)
-
-    for i in range(l):
-        if t[i] is None:
-            continue
-
-        r = pygame.Rect(t[i][0], t[i][1], 20, 20)
-        pygame.draw.rect(screen, BLACK, r, 0)
+    screen.blit(text, (10, 10))
 
     pygame.display.flip()
-
-    if 500 - k * 5 > 0:
-        pygame.time.wait(500 - k * 5)
-        k += 1
