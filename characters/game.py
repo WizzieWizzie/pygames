@@ -1,4 +1,5 @@
 import pygame
+import control
 from Invader import Invader
 
 BLACK = (0, 0, 0)
@@ -9,12 +10,33 @@ pygame.init()
 screen = pygame.display.set_mode([500, 500])
 
 l = 10
-invader = Invader('ufo', l, BLACK, screen)
-pos = { 'x': 0, 'y': 0 }
+invaders = []
+
+for i in range(0, 5):
+    invaders.append({
+        'x': i * l * 9,
+        'y': 0,
+        'o': Invader('squid', l, BLACK, screen)
+    })
+
+for i in range(0, 4):
+    invaders.append({
+        'x': i * l * 12,
+        'y': 10 * l,
+        'o': Invader('crab', l, BLACK, screen)
+    })
+
+for i in range(0, 4):
+    invaders.append({
+        'x': i * l * 13,
+        'y': 20 * l,
+        'o': Invader('jellyfish', l, BLACK, screen)
+    })
+
+pos_beam = { 'x': 0, 'y': -1 }
+pos_cannon = { 'x': 0, 'y': 200 }
 
 done = False
-_x = 0
-_y = -1
 while not done:
     pygame.time.wait(250)
 
@@ -22,29 +44,23 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE and _y < 0:
-                _x = pos['x'] + 70
-                _y = 190
-
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_UP]:
-        pos['y'] = pos['y'] - l
-    if keys[pygame.K_DOWN]:
-        pos['y'] = pos['y'] + l
-    if keys[pygame.K_LEFT]:
-        pos['x'] = pos['x'] - l
-    if keys[pygame.K_RIGHT]:
-        pos['x'] = pos['x'] + l
+            if event.key == pygame.K_SPACE and pos_beam['y'] < 0:
+                pos_beam = { 'x': pos_cannon['x'] + 70, 'y': 190 }
 
     screen.fill(WHITE)
 
-    invader.draw_frame(pos['x'], pos['y'] + 200)
-    invader.next_frame()
+    #pos_cannon = control.cannon(pos_cannon, l)
+    for invader in invaders:
+        pos = {
+            'x': 0 + invader['x'],
+            'y': 0 + invader['y']
+        }
+        invader['o'].draw_frame(pos)
+        invader['o'].next_frame()
 
-    if _y > -1:
-        beam = pygame.Rect(_x, _y, l, 2 * l)
+    if pos_beam['y'] > -1:
+        beam = pygame.Rect(pos_beam['x'], pos_beam['y'], l, 2 * l)
         pygame.draw.rect(screen, BLACK, beam, 0)
-        _y = _y - l
+        pos_beam['y'] = pos_beam['y'] - l
 
     pygame.display.flip()

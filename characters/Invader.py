@@ -34,9 +34,9 @@ class Invader:
         if self.index >= len(self.frames):
             self.index = 0
 
-    def draw_frame(self, x, y):
+    def draw_frame(self, position):
         for c in self.frames[self.index]:
-            _x = c[0] * self.size + x
-            _y = c[1] * self.size + y
+            _x = c[0] * self.size + position['x']
+            _y = c[1] * self.size + position['y']
             rect = pygame.Rect(_x, _y, c[2] * self.size, self.size)
             pygame.draw.rect(self.screen, self.colour, rect, 0)
